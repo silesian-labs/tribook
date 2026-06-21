@@ -18,4 +18,3 @@ out/
 npm-debug.log*
 .pnpm-debug.log*
 next-env.d.ts
-DEPLOY.md

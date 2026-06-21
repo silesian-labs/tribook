@@ -57,7 +57,7 @@ The frontend configuration is stored in [`frontend/lib/constants.ts`](frontend/l
 
 ## Hosting
 
-To host the dApp and the agent publicly on Render's free tier, see [`DEPLOY.md`](DEPLOY.md). A ready-to-use [`render.yaml`](render.yaml) Blueprint provisions both services. The frontend and agent are deployed independently — they share state only through the on-chain vault, not over HTTP.
+To host the dApp and the agent publicly on Render's free tier, see [`DEPLOY.md`](DEPLOY.md). The frontend and agent are deployed independently — they share state only through the on-chain vault, not over HTTP.
 
 ## Architecture
 
