@@ -35,7 +35,6 @@ export function HowItWorks() {
   return (
     <section id="how" className="px-4 py-24 sm:py-32">
       <div className="mx-auto grid max-w-5xl items-center gap-12 lg:grid-cols-[1fr_1.05fr]">
-        {/* left: pillars */}
         <div>
           <Reveal>
             <Eyebrow dotColor="#8B5CF6">Impossible anywhere else</Eyebrow>
@@ -63,7 +62,6 @@ export function HowItWorks() {
           </div>
         </div>
 
-        {/* right: animated PTB bundle */}
         <Reveal delay={0.1}>
           <Bezel glow="margin" className="shadow-ambient">
             <div className="p-6">

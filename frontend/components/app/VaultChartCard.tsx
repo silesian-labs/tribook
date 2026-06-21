@@ -30,15 +30,12 @@ export function VaultChartCard() {
     }
   }, []);
 
-  // Fetch immediately + poll every 15 s
   useEffect(() => {
     fetchHistory();
     const id = setInterval(fetchHistory, FETCH_INTERVAL_MS);
     return () => clearInterval(id);
   }, [fetchHistory]);
 
-  // Append a live point using vaultData (updated every 8s by useSuiClientQuery)
-  // so the chart always ends at the actual current value, not the last 15s snapshot.
   const chartData = useMemo<Snapshot[]>(() => {
     if (snapshots.length === 0) return [];
     const liveLabel = new Date().toLocaleTimeString("en-US", {
@@ -50,7 +47,6 @@ export function VaultChartCard() {
       tvl: vaultData.tvl,
       label: liveLabel,
     };
-    // Only append if live value differs meaningfully from last snapshot
     const last = snapshots[snapshots.length - 1];
     const navDiff = Math.abs(livePoint.nav - last.nav);
     const tvlDiff = Math.abs(livePoint.tvl - last.tvl);
@@ -85,7 +81,6 @@ export function VaultChartCard() {
       <div className="bezel-core p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            {/* Metric toggle */}
             <div className="flex gap-1 rounded-full border border-white/10 bg-white/[0.03] p-1">
               {(["nav", "tvl"] as Metric[]).map((m) => (
                 <button
@@ -103,14 +98,12 @@ export function VaultChartCard() {
               ))}
             </div>
 
-            {/* Current value */}
             <p className="mt-3 font-display text-3xl font-semibold text-white tnum">
               {metric === "nav"
                 ? animCurrentValue.toFixed(4)
                 : fmtUsd(animCurrentValue, { compact: true })}
             </p>
 
-            {/* Change over visible window */}
             {change !== null ? (
               <p
                 className={cn(
@@ -133,7 +126,6 @@ export function VaultChartCard() {
             )}
           </div>
 
-          {/* Snapshot count badge */}
           <div className="flex flex-col items-end gap-1">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.04] px-2.5 py-1 text-[11px] text-white/40">
               <span
@@ -150,7 +142,6 @@ export function VaultChartCard() {
           </div>
         </div>
 
-        {/* Chart */}
         <div className="mt-4">
           <NavChart
             data={chartData}
@@ -160,7 +151,6 @@ export function VaultChartCard() {
           />
         </div>
 
-        {/* Stat row */}
         <div className="mt-4 grid grid-cols-2 gap-3 border-t border-white/5 pt-4 text-[12px] sm:grid-cols-4">
           <div>
             <p className="text-white/40">NAV / share</p>

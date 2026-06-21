@@ -80,7 +80,6 @@ export function Nav({
               </Link>
             )}
 
-            {/* Hamburger → X morph */}
             <button
               aria-label="Menu"
               onClick={() => setOpen((o) => !o)}
@@ -105,7 +104,6 @@ export function Nav({
         </nav>
       </header>
 
-      {/* Full-screen mobile overlay */}
       <AnimatePresence>
         {open && (
           <motion.div

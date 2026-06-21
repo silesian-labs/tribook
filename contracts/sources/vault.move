@@ -4,10 +4,8 @@ module tribook::tribook_vault {
     use tribook::tbusdc::TBUSDC;
     use deepbook::balance_manager::{DepositCap, WithdrawCap, TradeCap};
 
-    // Error codes
     const EInsufficientIdleBalance: u64 = 1;
 
-    // Events defined inside the module where they are emitted
     public struct DepositEvent has copy, drop {
         user: address,
         usdc_in: u64,
@@ -22,13 +20,13 @@ module tribook::tribook_vault {
 
     public struct Vault<phantom USDC> has key {
         id: UID,
-        usdc_balance: Balance<USDC>,       // Idle USDC inside the vault
-        total_shares: u64,                 // tbUSDC in circulation
-        spot_allocated: u64,               // USDC allocated to Spot MM
-        margin_allocated: u64,             // USDC allocated to Margin
-        margin_debt: u64,                  // Outstanding debt in Margin
-        predict_allocated: u64,            // USDC allocated to Predict
-        shares_cap: TreasuryCap<TBUSDC>,   // TreasuryCap to mint/burn TBUSDC
+        usdc_balance: Balance<USDC>,
+        total_shares: u64,
+        spot_allocated: u64,
+        margin_allocated: u64,
+        margin_debt: u64,
+        predict_allocated: u64,
+        shares_cap: TreasuryCap<TBUSDC>,
         spot_manager_id: ID,
         spot_deposit_cap: DepositCap,
         spot_withdraw_cap: WithdrawCap,
@@ -37,7 +35,6 @@ module tribook::tribook_vault {
         predict_manager_id: ID,
     }
 
-    /// Create and share a new Vault.
     public fun create_vault<USDC>(
         shares_cap: TreasuryCap<TBUSDC>,
         spot_manager_id: ID,
@@ -67,7 +64,6 @@ module tribook::tribook_vault {
         transfer::share_object(vault);
     }
 
-    /// Deposit USDC -> mint and return tbUSDC shares.
     public fun deposit<USDC>(
         vault: &mut Vault<USDC>,
         coin: Coin<USDC>,
@@ -82,14 +78,11 @@ module tribook::tribook_vault {
             (((amount as u128) * (vault.total_shares as u128)) / (nav as u128)) as u64
         };
         
-        // Add to vault balance
         vault.usdc_balance.join(coin.into_balance());
         
-        // Mint tbUSDC shares
         let shares_coin = coin::mint(&mut vault.shares_cap, shares, ctx);
         vault.total_shares = vault.total_shares + shares;
         
-        // Emit DepositEvent
         sui::event::emit(DepositEvent {
             user: ctx.sender(),
             usdc_in: amount,
@@ -99,7 +92,6 @@ module tribook::tribook_vault {
         shares_coin
     }
 
-    /// Burn tbUSDC shares -> withdraw and return USDC.
     public fun withdraw<USDC>(
         vault: &mut Vault<USDC>,
         shares_coin: Coin<TBUSDC>,
@@ -110,18 +102,14 @@ module tribook::tribook_vault {
         
         let amount = (((shares as u128) * (nav as u128)) / (vault.total_shares as u128)) as u64;
         
-        // Assert we have enough idle balance for this withdrawal (FIX 5)
         assert!(vault.usdc_balance.value() >= amount, EInsufficientIdleBalance);
 
-        // Burn tbUSDC shares
         coin::burn(&mut vault.shares_cap, shares_coin);
         vault.total_shares = vault.total_shares - shares;
         
-        // Split USDC from internal balance
         let balance_to_withdraw = vault.usdc_balance.split(amount);
         let coin_to_withdraw = coin::from_balance(balance_to_withdraw, ctx);
         
-        // Emit WithdrawEvent
         sui::event::emit(WithdrawEvent {
             user: ctx.sender(),
             shares_in: shares,
@@ -131,9 +119,7 @@ module tribook::tribook_vault {
         coin_to_withdraw
     }
 
-    // === View / Read-Only Functions ===
 
-    /// Computes the total assets (NAV) of the vault.
     public fun total_assets<USDC>(vault: &Vault<USDC>): u64 {
         let allocated = vault.spot_allocated + vault.margin_allocated + vault.predict_allocated;
         let balance_val = vault.usdc_balance.value();
@@ -144,10 +130,9 @@ module tribook::tribook_vault {
         }
     }
 
-    /// Computes the NAV per share, scaled by 1,000,000 (6 decimals).
     public fun nav_per_share<USDC>(vault: &Vault<USDC>): u64 {
         if (vault.total_shares == 0) {
-            1_000_000 // 1.0
+            1_000_000
         } else {
             (((total_assets(vault) as u128) * 1_000_000) / (vault.total_shares as u128)) as u64
         }
@@ -201,7 +186,6 @@ module tribook::tribook_vault {
         vault.predict_manager_id
     }
 
-    // === Package Functions (Only callable by modules in this package) ===
 
     public(package) fun allocate_spot<USDC>(
         vault: &mut Vault<USDC>,

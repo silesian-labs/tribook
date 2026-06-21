@@ -8,7 +8,6 @@ interface SparklineProps {
   strokeWidth?: number;
 }
 
-// Dependency-free SVG sparkline. Pure render, SSR-safe.
 export function Sparkline({
   data,
   width = 120,

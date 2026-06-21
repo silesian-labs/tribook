@@ -15,8 +15,6 @@ const { networkConfig } = createNetworkConfig({
   testnet:  { url: getFullnodeUrl("testnet") },
   mainnet:  { url: getFullnodeUrl("mainnet") },
   devnet:   { url: getFullnodeUrl("devnet") },
-  // "sui" is the chain identifier some wallets (Suiet, Sui Wallet) report for mainnet.
-  // Without it dapp-kit throws "NetworkConfig not found for sui".
   sui:      { url: getFullnodeUrl("mainnet") },
 });
 

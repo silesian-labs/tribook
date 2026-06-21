@@ -10,7 +10,6 @@ interface RevealProps extends Omit<HTMLMotionProps<"div">, "children"> {
   once?: boolean;
 }
 
-// Heavy, cinematic fade-up. Elements never appear statically.
 export function Reveal({ children, delay = 0, y = 22, once = true, ...rest }: RevealProps) {
   const reduce = useReducedMotion();
   return (

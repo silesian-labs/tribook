@@ -9,13 +9,11 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Obsidian base palette
         void: "#050507",
         obsidian: "#08090d",
         graphite: "#0e1016",
         slate: "#141822",
         hairline: "rgba(255,255,255,0.08)",
-        // The three books
         spot: {
           DEFAULT: "#2DD4BF", // aqua / teal
           soft: "#5EEAD4",
@@ -31,7 +29,6 @@ const config: Config = {
           soft: "#FBBF24",
           deep: "#b45309",
         },
-        // semantic
         up: "#34D399",
         down: "#FB7185",
       },
@@ -48,14 +45,12 @@ const config: Config = {
         "5xl": "2.75rem",
       },
       boxShadow: {
-        // soft, diffuse ambient — never harsh
         ambient: "0 40px 120px -30px rgba(0,0,0,0.8)",
         glow: "0 0 80px -20px rgba(45,212,191,0.45)",
         "glow-violet": "0 0 80px -20px rgba(139,92,246,0.45)",
         "inner-hl": "inset 0 1px 1px rgba(255,255,255,0.12)",
       },
       transitionTimingFunction: {
-        // Emil's strong curves
         "out-strong": "cubic-bezier(0.23, 1, 0.32, 1)",
         "in-out-strong": "cubic-bezier(0.77, 0, 0.175, 1)",
         drawer: "cubic-bezier(0.32, 0.72, 0, 1)",

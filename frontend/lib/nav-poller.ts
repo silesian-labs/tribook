@@ -1,19 +1,10 @@
-/**
- * Shared NAV poller singleton.
- *
- * Imported by:
- *  - instrumentation.ts  → starts at Next.js server boot
- *  - app/api/nav-history/route.ts → reads snapshots + ensures poller is running
- *
- * Module-level state persists for the lifetime of the Node.js process.
- */
 
 import { SuiClient } from "@mysten/sui/client";
 
 const RPC_URL = "https://fullnode.testnet.sui.io:443";
 const VAULT_ID = "0x6351c896d9881fa9a04dedb00d37af0983a836d1d04063088825620bb121b3e1";
 const POLL_INTERVAL_MS = 15_000;
-const MAX_SNAPSHOTS = 240; // 60 minutes at 15s cadence
+const MAX_SNAPSHOTS = 240;
 
 export interface Snapshot {
   t: number;
@@ -22,7 +13,6 @@ export interface Snapshot {
   label: string;
 }
 
-// Shared ring buffer — the route handler reads this directly
 export const snapshots: Snapshot[] = [];
 let pollerStarted = false;
 
@@ -69,11 +59,10 @@ async function poll() {
   }
 }
 
-/** Idempotent — safe to call multiple times, only starts once. */
 export function startNavPoller() {
   if (pollerStarted) return;
   pollerStarted = true;
-  poll(); // immediate first sample
+  poll();
   setInterval(poll, POLL_INTERVAL_MS);
   console.log("[nav-indexer] started — polling every", POLL_INTERVAL_MS / 1000, "s");
 }

@@ -2,7 +2,6 @@ import { cn } from "@/lib/cn";
 import { HTMLAttributes } from "react";
 
 interface BezelProps extends HTMLAttributes<HTMLDivElement> {
-  // optional colored glow behind the card
   glow?: "spot" | "margin" | "predict" | "none";
   innerClassName?: string;
 }
@@ -14,7 +13,6 @@ const glowMap: Record<string, string> = {
   none: "",
 };
 
-// The Doppelrand / double-bezel: outer machined shell + inner glass core.
 export function Bezel({
   className,
   innerClassName,

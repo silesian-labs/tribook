@@ -13,8 +13,6 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   full?: boolean;
 }
 
-// Island button with the nested "button-in-button" trailing icon and
-// physical press feedback (active:scale).
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
   { variant = "primary", trailingIcon, icon, full, className, children, ...rest },
   ref,

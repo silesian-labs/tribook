@@ -1,6 +1,6 @@
 import Fastify from "fastify";
 import { config } from "./config.js";
-import { recentDecisions, recentPrices } from "./db/repository.js";
+import { recentDecisions, recentPrices } from "./history.js";
 import { runTick } from "./agent.js";
 
 export async function startApi() {

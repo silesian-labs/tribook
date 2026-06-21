@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 
 interface LiveValueProps {
   base: number;
-  // per-tick drift as a fraction of base, applied with small noise
   driftPerTick?: number;
   jitter?: number;
   intervalMs?: number;
@@ -12,8 +11,6 @@ interface LiveValueProps {
   className?: string;
 }
 
-// Simulates a slowly-ticking live metric. Starts from the deterministic `base`
-// (matches SSR), then drifts on the client only.
 export function LiveValue({
   base,
   driftPerTick = 0.000004,

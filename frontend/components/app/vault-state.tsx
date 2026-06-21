@@ -30,14 +30,13 @@ export interface Toast {
 }
 
 interface VaultState {
-  shares: number; // user tbUSDC
-  usdcBalance: number; // user USDC balance
+  shares: number;
+  usdcBalance: number;
   nav: number;
   tvl: number;
   deposit: (usdc: number) => Promise<void>;
   withdraw: (shares: number) => Promise<void>;
   feed: Rebalance[];
-  triggerRebalance: () => void;
   toasts: Toast[];
   pushToast: (t: Omit<Toast, "id">) => void;
   dismissToast: (id: number) => void;
@@ -65,7 +64,6 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   const [depositOpen, setDepositOpen] = useState(false);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
 
-  // Ticker: re-renders every second so "X ago" labels stay fresh
   const [now, setNow] = useState(() => Date.now());
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
   useEffect(() => {
@@ -73,7 +71,6 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     return () => { if (tickRef.current) clearInterval(tickRef.current); };
   }, []);
 
-  // 1. Fetch user tbUSDC balance
   const { data: userCoins, refetch: refetchUserCoins } = useSuiClientQuery(
     "getCoins",
     {
@@ -86,7 +83,6 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     }
   );
 
-  // 2. Fetch user USDC balance
   const { data: userUsdcCoins, refetch: refetchUserUsdcCoins } = useSuiClientQuery(
     "getCoins",
     {
@@ -99,7 +95,6 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     }
   );
 
-  // 3. Fetch Vault object
   const { data: vaultObject, refetch: refetchVault } = useSuiClientQuery(
     "getObject",
     {
@@ -111,7 +106,6 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     }
   );
 
-  // 4. Fetch Rebalance events
   const { data: eventsData, refetch: refetchEvents } = useSuiClientQuery(
     "queryEvents",
     {
@@ -145,21 +139,18 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     setToasts((prev) => prev.filter((x) => x.id !== id));
   }, []);
 
-  // Compute user shares
   const shares = useMemo(() => {
     if (!account?.address || !userCoins?.data) return 0;
     const rawSum = userCoins.data.reduce((acc, coin) => acc + Number(coin.balance), 0);
     return rawSum / 1_000_000;
   }, [account, userCoins]);
 
-  // Compute user USDC balance
   const usdcBalance = useMemo(() => {
     if (!account?.address || !userUsdcCoins?.data) return 0;
     const rawSum = userUsdcCoins.data.reduce((acc, coin) => acc + Number(coin.balance), 0);
     return rawSum / 1_000_000;
   }, [account, userUsdcCoins]);
 
-  // Parse Vault object fields
   const parsedVault = useMemo(() => {
     if (!vaultObject?.data?.content || vaultObject.data.content.dataType !== "moveObject") {
       return {
@@ -197,11 +188,6 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     };
   }, [vaultObject]);
 
-  // ─── Stable feed accumulator ───────────────────────────────────────────────
-  // We never replace the whole array. Instead we keep a ref that accumulates
-  // parsed events and only prepends genuinely new ones (by txDigest). This
-  // ensures AnimatePresence only slides in the new card at the top; existing
-  // cards keep their keys and never flash/exit.
   const stableFeedRef = useRef<Rebalance[]>([]);
   const seenDigestsRef = useRef<Set<string>>(new Set<string>());
   const [feed, setFeed] = useState<Rebalance[]>([]);
@@ -245,7 +231,6 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     }
 
     if (newItems.length > 0) {
-      // If the current stable list is still just the seed, flush it first
       const base = stableFeedRef.current === seedFeed ? [] : stableFeedRef.current;
       stableFeedRef.current = [...newItems, ...base].slice(0, 10);
       setFeed(stableFeedRef.current);
@@ -257,8 +242,6 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [eventsData]);
 
-  // Tick: update agoSec on every `now` change without touching array identity.
-  // We mutate the objects in-place so React doesn't re-run AnimatePresence.
   useEffect(() => {
     setFeed((prev) =>
       prev.map((r) => {
@@ -269,16 +252,13 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [now]);
 
-  // Derived state properties matching original interfaces
   const liveVault = useMemo(() => {
     return {
       tvl: parsedVault.tvl,
       navPerShare: parsedVault.navPerShare,
-      // These require multi-day history — not available on localnet
       change24hPct: null as number | null,
       apy7d: null as number | null,
       apy30d: null as number | null,
-      // Depositors not queryable from vault contract
       depositors: null as number | null,
       sharePrice: parsedVault.navPerShare,
       totalShares: parsedVault.totalShares,
@@ -334,15 +314,11 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   const liveRisk = useMemo(() => {
     const marginAlloc = parsedVault.marginAllocated;
     const marginDebt = parsedVault.marginDebt;
-    // Leverage is the only risk metric derivable from on-chain vault state.
-    // gross = collateral + borrowed; net exposure = collateral
     const leverage = marginAlloc > 0 ? (marginAlloc + marginDebt) / marginAlloc : 1.0;
     return {
-      // Real from chain:
       leverage,
       withinCharter: leverage <= 2.0,
       limits: { leverage: 2.0, delta: 0.3, singlePosition: 0.2 },
-      // Not derivable from localnet vault state — hidden in UI:
       netDelta: null as number | null,
       vega: null as number | null,
       sharpe30d: null as number | null,
@@ -350,9 +326,6 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     };
   }, [parsedVault]);
 
-  // Real aggregated positions: one entry per active book, derived purely from
-  // vault on-chain state. No fake entry/mark/pnl — those require off-chain
-  // order-book data that the localnet doesn't expose.
   const livePositions = useMemo(() => {
     const { spotAllocated, marginAllocated, marginDebt, predictAllocated } = parsedVault;
     const positions = [];
@@ -425,8 +398,6 @@ export function VaultProvider({ children }: { children: ReactNode }) {
 
         const [splitCoin] = tx.splitCoins(tx.object(primaryCoin), [tx.pure.u64(rawAmount)]);
 
-        // deposit() returns Coin<TBUSDC> — must be transferred to sender explicitly
-        // (it's a public fun, not entry fun, so the PTB owns the return value)
         const [sharesCoin] = tx.moveCall({
           target: `${PACKAGE_ID}::${MODULE_NAMES.VAULT}::deposit`,
           typeArguments: [COIN_TYPES.USDC],
@@ -434,7 +405,6 @@ export function VaultProvider({ children }: { children: ReactNode }) {
         });
         tx.transferObjects([sharesCoin], tx.pure.address(account.address));
 
-        // Pre-build: setSender is required so the SDK knows who pays gas
         tx.setSender(account.address);
         await tx.build({ client });
 
@@ -486,7 +456,6 @@ export function VaultProvider({ children }: { children: ReactNode }) {
 
         const [splitShares] = tx.splitCoins(tx.object(primaryCoin), [tx.pure.u64(rawShares)]);
 
-        // withdraw() returns Coin<USDC> — must be transferred to sender explicitly
         const [usdcCoin] = tx.moveCall({
           target: `${PACKAGE_ID}::${MODULE_NAMES.VAULT}::withdraw`,
           typeArguments: [COIN_TYPES.USDC],
@@ -494,7 +463,6 @@ export function VaultProvider({ children }: { children: ReactNode }) {
         });
         tx.transferObjects([usdcCoin], tx.pure.address(account.address));
 
-        // Pre-build: setSender is required so the SDK knows who pays gas
         tx.setSender(account.address);
         await tx.build({ client });
 
@@ -519,15 +487,6 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     [account, userCoins, signAndExecute, pushToast, refetchAll]
   );
 
-  const triggerRebalance = useCallback(() => {
-    refetchEvents();
-    pushToast({
-      title: "Checking agent status",
-      body: "Scanning blockchain for recent rebalances...",
-      tone: "default",
-    });
-  }, [refetchEvents, pushToast]);
-
   const value = useMemo(
     () => ({
       shares,
@@ -537,7 +496,6 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       deposit,
       withdraw,
       feed,
-      triggerRebalance,
       toasts,
       pushToast,
       dismissToast,
@@ -561,7 +519,6 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       deposit,
       withdraw,
       feed,
-      triggerRebalance,
       toasts,
       pushToast,
       dismissToast,

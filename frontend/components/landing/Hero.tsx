@@ -19,7 +19,6 @@ export function Hero() {
 
   return (
     <section className="relative overflow-hidden px-4 pt-36 pb-16 sm:pt-44">
-      {/* localized drifting orbs */}
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute -top-24 left-[12%] h-72 w-72 rounded-full bg-spot/20 blur-[120px] animate-drift-a" />
         <div className="absolute top-10 right-[10%] h-80 w-80 rounded-full bg-margin/20 blur-[130px] animate-drift-b" />

@@ -9,7 +9,6 @@ export function PositionSummary() {
   const { shares, nav, vaultData, setDepositOpen, setWithdrawOpen } = useVault();
   const value = shares * nav;
   const hasPosition = shares > 0;
-  // NAV starts at 1.0 on deploy, so gain = shares × (nav - 1.0)
   const earned = shares * (nav - 1.0);
 
   const animValue = useAnimatedNumber(value);
@@ -59,7 +58,6 @@ export function PositionSummary() {
           </div>
         </div>
 
-        {/* Vault summary panel — real data only */}
         <div className="flex flex-col justify-between rounded-2xl border border-white/[0.06] bg-white/[0.015] p-5">
           <div>
             <p className="text-[12px] text-white/45">Vault summary</p>

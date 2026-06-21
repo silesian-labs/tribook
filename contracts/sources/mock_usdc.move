@@ -6,7 +6,7 @@ module tribook::mock_usdc {
     fun init(witness: MOCK_USDC, ctx: &mut TxContext) {
         let (treasury_cap, metadata) = coin::create_currency(
             witness,
-            6, // decimals
+            6,
             b"mUSDC",
             b"Mock USDC",
             b"Mock USDC for Tribook testing",

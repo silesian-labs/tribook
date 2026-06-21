@@ -6,7 +6,7 @@ module tribook::tbusdc {
     fun init(otw: TBUSDC, ctx: &mut TxContext) {
         let (treasury_cap, metadata) = coin::create_currency(
             otw,
-            6, // decimals
+            6,
             b"tbUSDC",
             b"Tribook USDC",
             b"Shares representation of Tribook USDC Vault",

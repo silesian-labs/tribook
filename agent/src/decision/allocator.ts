@@ -52,8 +52,6 @@ export function decideAllocation(
   }
 
   if (deviationBps >= config.RISE_TRIGGER_BPS && recallBudget > 0) {
-    // end_rebalance requires margin_allocated == 0, so always recall ALL margin first.
-    // Then recall as much spot as possible up to MAX_ACTION_USDC total.
     const marginAmount = vault.marginAllocatedUsdc;
     const spotAmount = round(Math.min(
       vault.spotAllocatedUsdc,

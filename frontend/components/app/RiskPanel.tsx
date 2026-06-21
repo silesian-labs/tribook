@@ -34,7 +34,6 @@ export function RiskPanel() {
           </span>
         </div>
 
-        {/* Leverage — real, from chain */}
         <div className="mt-6">
           <div className="flex items-baseline justify-between">
             <span className="text-[13px] text-white/70">Leverage</span>
@@ -59,7 +58,6 @@ export function RiskPanel() {
           <p className="mt-1 text-[11px] text-white/35">cap {risk.limits.leverage.toFixed(1)}×</p>
         </div>
 
-        {/* Metrics requiring off-chain analytics — shown as N/A */}
         <div className="mt-6 grid grid-cols-2 gap-3 border-t border-white/5 pt-5 text-[12px]">
           <div>
             <p className="text-white/40">Net delta</p>

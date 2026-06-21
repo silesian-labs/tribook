@@ -60,7 +60,7 @@ No. The frontend reads the vault, balances and events directly from Sui testnet.
 
 ## Testnet assets
 
-The previous local-sandbox faucet route remains server-side infrastructure, but the faucet control is disabled in the testnet interface. A wallet must already hold the configured DeepBook DBUSDC coin to make a deposit. Standard Sui testnet gas can be obtained from a supported Sui faucet or wallet developer tools.
+The interface has no built-in faucet. A wallet must already hold the configured DeepBook DBUSDC coin to make a deposit, and standard Sui testnet gas can be obtained from a supported Sui faucet or wallet developer tools.
 
 ## Real and illustrative data
 

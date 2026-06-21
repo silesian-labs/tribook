@@ -49,7 +49,6 @@ export function PositionsTable() {
                 </div>
               </div>
 
-              {/* header */}
               <div className="hidden grid-cols-[2fr_1fr_1fr] gap-3 px-1 pb-2 text-[11px] uppercase tracking-eyebrow text-white/35 sm:grid">
                 <span>Market / Strategy</span>
                 <span className="text-right">Allocated</span>
@@ -87,7 +86,6 @@ export function PositionsTable() {
                 ))}
               </div>
 
-              {/* disclaimer */}
               <p className="mt-3 text-[11px] text-white/25">
                 Allocated amounts from on-chain vault state · P&amp;L not available on testnet
               </p>

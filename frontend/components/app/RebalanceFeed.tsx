@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowSquareOut, Lightning } from "@phosphor-icons/react";
+import { ArrowSquareOut } from "@phosphor-icons/react";
 import { useVault } from "./vault-state";
 import { type Book } from "@/lib/mock";
 
@@ -42,7 +42,7 @@ function SkeletonCard() {
 }
 
 export function RebalanceFeed() {
-  const { feed, triggerRebalance } = useVault();
+  const { feed } = useVault();
 
   return (
     <div className="bezel">
@@ -52,13 +52,6 @@ export function RebalanceFeed() {
             <h3 className="text-[15px] font-medium text-white">Rebalance feed</h3>
             <p className="mt-0.5 text-[12px] text-white/40">Every page turn is one atomic PTB</p>
           </div>
-          <button
-            onClick={triggerRebalance}
-            className="group inline-flex items-center gap-1.5 rounded-full border border-spot/30 bg-spot/[0.08] px-3.5 py-2 text-[13px] font-medium text-spot transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] active:scale-[0.96] hover:bg-spot/[0.14]"
-          >
-            <Lightning weight="fill" className="h-3.5 w-3.5 transition-transform duration-300 group-hover:scale-110" />
-            Trigger rebalance
-          </button>
         </div>
 
         <div className="mt-5 space-y-2.5">

@@ -2,9 +2,6 @@ import "dotenv/config";
 import { z } from "zod";
 
 const envSchema = z.object({
-  DATABASE_URL: z
-    .string()
-    .default("postgres://tribook:tribook@localhost:5433/tribook"),
   GEMINI_API_KEY: z.string().default(""),
   GEMINI_MODEL: z.string().default("gemini-2.0-flash"),
   SUI_NETWORK: z
@@ -36,15 +33,12 @@ const envSchema = z.object({
   MARGIN_REGISTRY_ID: z
     .string()
     .default("0x67ca9186bee12c5f9a5053f8b2fb7de9e333ec7865882b87d7b07fdbe90a61e2"),
-  // MarginPool<USDC> — used by end_rebalance_with_margin to compute debt in USDC
   USDC_MARGIN_POOL_ID: z
     .string()
     .default("0x019bc45905522c7a705ce9e1ba589abb4052b57eea41b42f4170be1c1452a50f"),
-  // MarginPool<SUI> — used by rebalance_margin_withdraw
   SUI_MARGIN_POOL_ID: z
     .string()
     .default("0x00249f9d28970390dd1bb48cfd9bcc3d2a351d9221a06aeefccda288c86d96ec"),
-  // DeepBook SUI/USDC Pool — used by rebalance_margin_withdraw
   SUI_USDC_POOL_ID: z
     .string()
     .default("0x8c3b2813a32b066d203e09eb4643fbc4af1e91c75f7b11bf2f1f88a298b3f721"),
@@ -66,7 +60,6 @@ const envSchema = z.object({
   USDC_PRICE_INFO_OBJECT_ID: z
     .string()
     .default("0x01d438e536db4d5693f180298fea3c305bf6df7fc7caa382b2439a940eaf6192"),
-  // Fraction of deploy budget sent to margin (basis points, 0–10000)
   MARGIN_SPLIT_BPS: z.coerce.number().int().min(0).max(10_000).default(3_000),
 
   PRICE_ASSET: z.string().default("SUI"),
@@ -88,5 +81,10 @@ const envSchema = z.object({
   API_PORT: z.coerce.number().int().positive().default(3001),
 });
 
-export const config = envSchema.parse(process.env);
+const runtimeEnv = {
+  ...process.env,
+  API_PORT: process.env.API_PORT ?? process.env.PORT,
+};
+
+export const config = envSchema.parse(runtimeEnv);
 export type Config = typeof config;

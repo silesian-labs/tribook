@@ -11,15 +11,13 @@ Gemini is an optional narration layer only. It can rewrite an already-made decis
 - trigger deployment or recall after configured price movement;
 - cap action size, daily turnover and idle-buffer usage;
 - split deployments between Spot and Margin;
-- refresh local Pyth objects when required by the sandbox;
-- expose health, price and decision endpoints;
-- optionally persist prices and decisions in PostgreSQL.
+- refresh local Pyth objects when required by the local sandbox;
+- expose health, price and decision endpoints.
 
 ## Requirements
 
 - Node.js 20 or newer;
 - access to a Sui RPC endpoint;
-- PostgreSQL only when persistence or the scripted `price_feed` source is used;
 - a private key only in `live` mode.
 
 ## Safe testnet start
@@ -39,31 +37,9 @@ curl http://localhost:3002/health
 curl -X POST http://localhost:3002/ticks
 ```
 
-Without `DATABASE_URL`, the process starts without persistence. The current fallback oracle adapter targets the local DeepBook sandbox; therefore a testnet agent without a populated `price_feed` will safely produce `hold` decisions.
+The checked-in example enables a self-contained sinusoidal demo signal, so no external price source is required. This simulated price only drives the agent's deterministic decision; submitted testnet transactions and DeepBook's Pyth validation remain real.
 
-## PostgreSQL and price history
-
-Start the bundled database:
-
-```bash
-docker compose up -d
-```
-
-Uncomment `DATABASE_URL` in `.env`, then run:
-
-```bash
-npm run db:migrate
-npm run dev
-```
-
-The database stores:
-
-- time-series prices in `price_feed`;
-- decisions and execution status;
-- submitted transaction digests;
-- daily turnover used by the risk gate.
-
-The `/prices` and `/decisions` endpoints require PostgreSQL.
+The agent keeps a short rolling history of prices, decisions and daily turnover in memory. It is served from the `/prices` and `/decisions` endpoints and resets when the process restarts.
 
 ## Commands
 
@@ -72,7 +48,6 @@ The `/prices` and `/decisions` endpoints require PostgreSQL.
 | `npm run dev` | Start the API and agent loop with file watching |
 | `npm start` | Start the API and agent loop once |
 | `npm run tick` | Run one agent tick |
-| `npm run db:migrate` | Apply PostgreSQL migrations |
 | `npm run typecheck` | Type-check without emitting files |
 | `npm run lint` | Run ESLint |
 | `npm run build` | Compile TypeScript |
@@ -82,8 +57,8 @@ The `/prices` and `/decisions` endpoints require PostgreSQL.
 | Method | Route | Description |
 |---|---|---|
 | `GET` | `/health` | Process status and execution mode |
-| `GET` | `/decisions?limit=50` | Recent persisted decisions; database required |
-| `GET` | `/prices?asset=SUI&limit=60` | Recent persisted prices; database required |
+| `GET` | `/decisions?limit=50` | Recent in-memory decisions |
+| `GET` | `/prices?asset=SUI&limit=60` | Recent in-memory prices |
 | `POST` | `/ticks` | Schedule an immediate agent tick |
 
 ## Execution modes
@@ -105,14 +80,16 @@ The checked-in testnet example uses:
 - a 10% off-chain idle target;
 - a 50 DBUSDC daily turnover limit.
 
+The signal starts at `SIMULATOR_BASE_PRICE`, moves by `SIMULATOR_AMP_PCT` in a sine wave and completes one cycle every `SIMULATOR_PERIOD_S`. With the example values, a funded vault should see a deploy and recall opportunity during each one-minute cycle.
+
 The Move contract performs stricter final checks, including a 15% minimum idle allocation, 60% maximum per book and 2× maximum Margin leverage.
 
 ## Localnet
 
-Localnet operation additionally requires the DeepBook sandbox, generated object IDs and its oracle service. Local `.env.localnet` files are intentionally ignored and are not portable between sandbox deployments because every new local chain produces new IDs.
+Localnet operation additionally requires the DeepBook sandbox, generated object IDs and its oracle service. When `SIMULATOR_BASE_PRICE` is omitted, the simulator uses the sandbox oracle price as its base. Local `.env.localnet` files are intentionally ignored and are not portable between sandbox deployments because every new local chain produces new IDs.
 
 ## Known limitations
 
-- The public-testnet price adapter is database-backed; direct on-chain Pyth price reading is not implemented in this process.
-- Recall normalization currently may scale down the required full Margin withdrawal, causing the final Move invariant to reject the transaction.
+- The sinusoidal feed is a deterministic demonstration signal, not a production market-price strategy.
+- In-memory reference price, history and turnover reset when the API process restarts.
 - The HTTP API is operational tooling; the current frontend reads Sui directly and does not depend on it.

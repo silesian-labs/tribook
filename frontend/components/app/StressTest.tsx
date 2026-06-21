@@ -8,10 +8,8 @@ import { cn } from "@/lib/cn";
 
 const shocks = [-20, -10, -5, 0, 5, 10, 20];
 
-// Illustrative per-book sensitivity to a SUI spot shock (delta-neutral target).
 function project(shockPct: number) {
   const s = shockPct / 100;
-  // vault-level: net delta + a touch of positive gamma
   const navImpact = risk.netDelta * s + 0.5 * risk.gamma * s * s;
   const perBook = {
     spot: -0.18 * Math.abs(s), // inventory bleed in fast moves

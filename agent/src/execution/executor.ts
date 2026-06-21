@@ -1,9 +1,9 @@
-import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Transaction } from "@mysten/sui/transactions";
 import { SuiJsonRpcClient } from "@mysten/sui/jsonRpc";
 import { config } from "../config.js";
 import type { AgentDecision } from "../domain.js";
 import { refreshPythOracle } from "../prices/pyth-refresh.js";
+import { keypairFromSecretKey } from "../sui/signer.js";
 
 const CLOCK = "0x0000000000000000000000000000000000000000000000000000000000000006";
 
@@ -22,12 +22,12 @@ export async function execute(
   const deploy = decision.side !== "sell";
   const tx = buildRebalance(decision, deploy);
 
-  // Refresh Pyth oracle timestamps before any live margin deposit
-  // (sandbox oracle posts prices with 24h-old publish_time; freshness check fails without this)
-  if (config.EXECUTION_MODE === "live" && decision.marginAmountUsdc > 0) {
+  if (
+    config.EXECUTION_MODE === "live" &&
+    config.SUI_NETWORK === "localnet" &&
+    decision.marginAmountUsdc > 0
+  ) {
     const refreshed = await refreshPythOracle();
-    // Give Sui validators ~2s to propagate the updated PriceInfoObject before
-    // the buy TX reads it — avoids check_price_is_fresh race on the first attempt
     if (refreshed) await new Promise((r) => setTimeout(r, 2000));
   }
 
@@ -49,7 +49,7 @@ export async function execute(
       url: config.SUI_RPC_URL,
       network: config.SUI_NETWORK,
     });
-    const signer = Ed25519Keypair.fromSecretKey(config.SUI_PRIVATE_KEY);
+    const signer = keypairFromSecretKey(config.SUI_PRIVATE_KEY);
     const result = await client.signAndExecuteTransaction({
       transaction: tx,
       signer,

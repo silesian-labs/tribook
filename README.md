@@ -11,7 +11,7 @@ The current implementation includes a public Sui testnet vault and an atomic Dee
 | Directory | Purpose | Required to view the app? |
 |---|---|---|
 | [`frontend`](frontend) | Next.js landing page and vault dApp | Yes |
-| [`api`](api) | Autonomous agent and operational HTTP API | No; required for autonomous rebalancing |
+| [`agent`](agent) | Autonomous agent and operational HTTP API | No; required for autonomous rebalancing |
 | [`contracts`](contracts) | Sui Move vault, share token, agent capability and risk rules | No; already deployed on testnet |
 
 ## Quick start
@@ -29,7 +29,7 @@ Open [http://localhost:3000](http://localhost:3000). The frontend connects direc
 To also run the agent in safe, read-only mode:
 
 ```bash
-cd api
+cd agent
 npm ci
 cp .env.example .env
 npm run dev
@@ -41,7 +41,7 @@ The agent API is then available at [http://localhost:3002/health](http://localho
 
 **For the website and dashboard:** run only `frontend`.
 
-**For autonomous strategy ticks:** run `api` as well. The agent needs a price source. PostgreSQL is optional for process startup, but the current public-testnet configuration requires a populated `price_feed` database to produce price-triggered decisions. Without it, the agent safely holds.
+**For autonomous strategy ticks:** run `agent` as well. The agent needs a price source. The checked-in public-testnet configuration ships with a self-contained simulated price signal, so no database or external service is required to produce price-triggered decisions.
 
 **For contract development:** use `contracts`. You do not need to republish contracts to use the existing testnet app.
 
@@ -53,7 +53,11 @@ The agent API is then available at [http://localhost:3002/health](http://localho
 | Vault | `0x6351c896d9881fa9a04dedb00d37af0983a836d1d04063088825620bb121b3e1` |
 | AgentCap | `0xd94685dae90dde97f2c3cd724ad0e9dfd130edf1b2f845bb19a6e6db9d24acc0` |
 
-The frontend configuration is stored in [`frontend/lib/constants.ts`](frontend/lib/constants.ts). The same deployment is documented in [`contracts/Published.toml`](contracts/Published.toml) and [`api/.env.example`](api/.env.example).
+The frontend configuration is stored in [`frontend/lib/constants.ts`](frontend/lib/constants.ts). The same deployment is documented in [`contracts/Published.toml`](contracts/Published.toml) and [`agent/.env.example`](agent/.env.example).
+
+## Hosting
+
+To host the dApp and the agent publicly on Render's free tier, see [`DEPLOY.md`](DEPLOY.md). A ready-to-use [`render.yaml`](render.yaml) Blueprint provisions both services. The frontend and agent are deployed independently — they share state only through the on-chain vault, not over HTTP.
 
 ## Architecture
 
@@ -84,7 +88,7 @@ The frontend reads the vault and events directly from Sui. The agent independent
 ## Development checks
 
 ```bash
-(cd api && npm ci && npm run typecheck && npm run lint)
+(cd agent && npm ci && npm run typecheck && npm run lint)
 (cd frontend && pnpm install --frozen-lockfile && pnpm build)
 (cd contracts && sui move build --build-env testnet)
 ```

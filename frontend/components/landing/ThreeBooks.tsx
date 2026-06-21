@@ -6,7 +6,6 @@ import { Reveal } from "@/components/ui/Reveal";
 import { Sparkline } from "@/components/ui/Sparkline";
 import { books, navSeries } from "@/lib/mock";
 
-// distinct-looking sparkline shapes per book, derived from the deterministic series
 const shapes: Record<string, number[]> = {
   spot: navSeries.slice(-24).map((p, i) => p.nav + Math.sin(i / 2) * 0.002),
   margin: navSeries.slice(-24).map((p, i) => p.nav + Math.cos(i / 3) * 0.003),

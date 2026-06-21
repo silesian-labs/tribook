@@ -1,7 +1,3 @@
-/**
- * Standalone dry-run test: bypasses DB, uses hardcoded price context.
- * Verifies that the executor builds a valid multi-book PTB.
- */
 import { ChainObserver } from "../chain/observer.js";
 import { decideAllocation } from "../decision/allocator.js";
 import { applyRiskGates } from "../decision/risk.js";
@@ -13,7 +9,6 @@ async function main() {
   const vault = await obs.vault();
   console.log("Vault:", JSON.stringify({ idleUsdc: vault.idleUsdc, spotAllocatedUsdc: vault.spotAllocatedUsdc, marginAllocatedUsdc: vault.marginAllocatedUsdc, totalUsdc: vault.totalUsdc }, null, 2));
 
-  // Simulate a 6% price drop (triggers deploy at default 500bps = 5%)
   const priceCtx = {
     asset: "SUI",
     latestPrice: 3.70,

@@ -1,9 +1,3 @@
-// ─────────────────────────────────────────────────────────────────────────
-// Tribook mock data engine.
-// Everything here is DETERMINISTIC (seeded) so server and client render the
-// same values — no hydration mismatch. "Live" motion is layered on the client
-// via counters/tickers, never from random values at render time.
-// ─────────────────────────────────────────────────────────────────────────
 
 export type Book = "spot" | "margin" | "predict";
 
@@ -17,16 +11,15 @@ function mulberry32(seed: number) {
   };
 }
 
-// ── NAV per share history (90 days) ────────────────────────────────────────
 export interface NavPoint {
-  t: number; // ms timestamp
-  label: string; // e.g. "Mar 12"
-  nav: number; // nav per share
-  tvl: number; // total value locked
+  t: number;
+  label: string;
+  nav: number;
+  tvl: number;
 }
 
 const DAY = 86_400_000;
-const ANCHOR = Date.UTC(2026, 5, 17); // 2026-06-17, deterministic "today"
+const ANCHOR = Date.UTC(2026, 5, 17);
 
 function buildNavSeries(): NavPoint[] {
   const rng = mulberry32(20260517);
@@ -36,15 +29,11 @@ function buildNavSeries(): NavPoint[] {
   let tvl = 1_250_000;
   for (let i = days - 1; i >= 0; i--) {
     const t = ANCHOR - i * DAY;
-    // gentle upward drift (~12% APY) with realistic micro-volatility + a few dips.
-    // The most recent week is kept smooth & positive so headline APY / 24h read
-    // consistently (no green badge on a red number).
     const recent = i < 7;
     const drift = 0.00032;
     const vol = i === 0 ? 0.00013 : (rng() - 0.5) * (recent ? 0.0006 : 0.0022);
     const shock = recent ? 0 : i === 61 || i === 60 ? -0.009 : i === 28 ? -0.006 : 0;
     nav = Math.max(0.985, nav * (1 + drift + vol + shock));
-    // TVL grows with deposits + nav, with some noise
     tvl = tvl * (1 + 0.012 + (rng() - 0.5) * 0.02) * (1 + (shock < 0 ? -0.03 : 0));
     const d = new Date(t);
     points.push({
@@ -78,7 +67,6 @@ export const vault = {
   highWaterMark: last.nav,
 };
 
-// ── Allocation across the three books + idle buffer ─────────────────────────
 export interface Allocation {
   book: Book | "idle";
   label: string;
@@ -99,7 +87,6 @@ export const allocation: Allocation[] = alloc.map((a) => ({
   usd: Math.round((a.pct / 100) * vault.tvl),
 }));
 
-// ── Risk metrics ────────────────────────────────────────────────────────────
 export const risk = {
   netDelta: 0.021, // fraction of NAV
   vega: 0.18, // normalized 0..1 exposure
@@ -116,16 +103,15 @@ export const risk = {
   },
 };
 
-// ── Open positions across the three primitives ──────────────────────────────
 export interface Position {
   id: string;
   book: Book;
   market: string;
   side: string;
-  size: number; // usd notional
+  size: number;
   entry: number | null;
   mark: number | null;
-  pnl: number | null;   // usd
+  pnl: number | null;
   pnlPct: number | null;
 }
 
@@ -139,14 +125,12 @@ export const positions: Position[] = [
   { id: "p7", book: "predict", market: "SUI 14d · ≥4.2", side: "Binary · Short", size: 96_400, entry: 0.58, mark: 0.55, pnl: 2_870, pnlPct: 2.98 },
 ];
 
-// ── Strategy contribution (last 7d) ─────────────────────────────────────────
 export const contributions: { book: Book; label: string; pct: number; color: string }[] = [
   { book: "spot", label: "Spot MM", pct: 0.34, color: "#2DD4BF" },
   { book: "margin", label: "Margin Arb", pct: 0.51, color: "#8B5CF6" },
   { book: "predict", label: "Predict", pct: 0.27, color: "#F5A524" },
 ];
 
-// ── Rebalance feed ──────────────────────────────────────────────────────────
 export interface Rebalance {
   id: string;
   digest: string;
@@ -215,7 +199,6 @@ export const rebalances: Rebalance[] = [
   },
 ];
 
-// ── The three books, descriptive ────────────────────────────────────────────
 export const books: {
   key: Book;
   name: string;

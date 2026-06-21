@@ -9,7 +9,6 @@ export function Cta() {
     <section className="px-4 py-24 sm:py-32">
       <Reveal>
         <div className="relative mx-auto max-w-4xl overflow-hidden rounded-[2.5rem] border border-white/10 bg-white/[0.02] px-6 py-20 text-center">
-          {/* orbs */}
           <div aria-hidden className="pointer-events-none absolute inset-0">
             <div className="absolute -top-20 left-[20%] h-60 w-60 rounded-full bg-spot/25 blur-[110px]" />
             <div className="absolute -bottom-24 right-[18%] h-64 w-64 rounded-full bg-margin/25 blur-[120px]" />

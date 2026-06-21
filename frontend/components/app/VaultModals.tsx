@@ -1,14 +1,12 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { useCurrentAccount } from "@mysten/dapp-kit";
 import { Modal } from "@/components/ui/Modal";
 import { WalletButton } from "@/components/ui/WalletButton";
 import { useVault } from "./vault-state";
 import { fmtNum, fmtPct } from "@/lib/format";
-import { ArrowDown, ArrowUp, CircleNotch, Wallet, Drop } from "@phosphor-icons/react";
-
-const FAUCET_AMOUNT_USDC = 1_000;
+import { ArrowDown, ArrowUp, CircleNotch, Wallet } from "@phosphor-icons/react";
 
 export function VaultModals() {
   const { depositOpen, withdrawOpen, setDepositOpen, setWithdrawOpen } = useVault();
@@ -30,10 +28,9 @@ function TradeModal({
   onClose: () => void;
 }) {
   const account = useCurrentAccount();
-  const { shares, usdcBalance, nav, vaultData, deposit, withdraw, pushToast, refetchAll } = useVault();
+  const { shares, usdcBalance, nav, vaultData, deposit, withdraw } = useVault();
   const [amount, setAmount] = useState("");
   const [pending, setPending] = useState(false);
-  const [minting, setMinting] = useState(false);
 
   const isDeposit = mode === "deposit";
   const accent = isDeposit ? "#2DD4BF" : "#8B5CF6";
@@ -67,36 +64,6 @@ function TradeModal({
 
   const queued = !isDeposit && value > 4200;
 
-  // Server-side faucet — anyone can call, key never leaves the server
-  const mintTestUsdc = useCallback(async () => {
-    if (!account?.address || minting) return;
-    setMinting(true);
-    try {
-      const res = await fetch("/api/faucet", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ recipient: account.address }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Faucet error");
-      pushToast({
-        title: "Faucet success! 🎉",
-        body: `${FAUCET_AMOUNT_USDC.toLocaleString()} MOCK_USDC on the way`,
-        tone: "up",
-        digest: data.digest,
-      });
-      setTimeout(refetchAll, 3000);
-    } catch (err: any) {
-      pushToast({
-        title: "Faucet failed",
-        body: err.message || "Try again later.",
-        tone: "down",
-      });
-    } finally {
-      setMinting(false);
-    }
-  }, [account, minting, pushToast, refetchAll]);
-
   return (
     <Modal
       open={open}
@@ -119,7 +86,6 @@ function TradeModal({
         </div>
       ) : (
         <div>
-          {/* amount input */}
           <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4">
             <div className="flex items-center justify-between text-[12px] text-white/40">
               <span>{isDeposit ? "You pay" : "You redeem"}</span>
@@ -155,7 +121,6 @@ function TradeModal({
             </div>
           </div>
 
-          {/* arrow */}
           <div className="my-2 flex justify-center">
             <span className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-graphite">
               {isDeposit ? (
@@ -166,7 +131,6 @@ function TradeModal({
             </span>
           </div>
 
-          {/* receive */}
           <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4">
             <div className="flex items-center justify-between text-[12px] text-white/40">
               <span>You receive</span>
@@ -180,31 +144,9 @@ function TradeModal({
             </div>
           </div>
 
-          {/* meta rows */}
           <div className="mt-4 space-y-2 text-[12px]">
             {isDeposit ? (
-              <>
-                <Row label="Est. 7d APY" value={fmtPct(vaultData?.apy7d ?? 11.4, 1)} tone="up" />
-                {/* Faucet row — visible only on testnet */}
-                {/* <div className="mt-2 flex items-center justify-between rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2">
-                  <div>
-                    <p className="text-[12px] text-white/55">Need test USDC?</p>
-                    <p className="text-[11px] text-white/30">Free testnet tokens, 1 per minute.</p>
-                  </div>
-                  <button
-                    onClick={mintTestUsdc}
-                    disabled={minting}
-                    className="flex items-center gap-1.5 rounded-full border border-spot/30 bg-spot/10 px-3 py-1.5 text-[12px] font-medium text-spot transition-colors hover:bg-spot/20 disabled:opacity-40"
-                  >
-                    {minting ? (
-                      <CircleNotch className="h-3 w-3 animate-spin" weight="bold" />
-                    ) : (
-                      <Drop className="h-3 w-3" weight="fill" />
-                    )}
-                    Get {FAUCET_AMOUNT_USDC.toLocaleString()} USDC
-                  </button>
-                </div> */}
-              </>
+              <Row label="Est. 7d APY" value={fmtPct(vaultData?.apy7d ?? 11.4, 1)} tone="up" />
             ) : (
               <Row
                 label="Processing"

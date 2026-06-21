@@ -11,8 +11,6 @@ interface CounterProps {
   from?: number;
 }
 
-// Counts up to `value` once it scrolls into view. Deterministic target,
-// client-only animation — no hydration mismatch (renders final value on server).
 export function Counter({
   value,
   format = (n) => n.toFixed(2),
@@ -26,8 +24,6 @@ export function Counter({
   const [display, setDisplay] = useState(format(value));
   const started = useRef(false);
 
-  // After mount (still off-screen), drop to the start value so the eventual
-  // scroll-in count-up is smooth instead of snapping from the final value.
   useEffect(() => {
     if (reduce || started.current) return;
     setDisplay(format(from));

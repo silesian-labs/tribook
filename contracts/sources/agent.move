@@ -4,7 +4,6 @@ module tribook::agent {
     use tribook::tribook_vault::{Self, Vault};
     use tribook::risk;
 
-    // DeepBook imports
     use deepbook::balance_manager::BalanceManager;
     use deepbook_margin::margin_manager::MarginManager;
     use deepbook_margin::margin_pool::MarginPool;
@@ -12,7 +11,6 @@ module tribook::agent {
     use deepbook::pool::Pool;
     use pyth::price_info::PriceInfoObject;
 
-    // Error codes
     const EInvalidVault: u64 = 1;
     const EInvalidAgentCap: u64 = 2;
     const EInvalidManager: u64 = 3;
@@ -26,12 +24,10 @@ module tribook::agent {
         vault_id: ID,
     }
 
-    /// Hot potato ticket to enforce start/end structure of rebalance
     public struct RebalanceTicket {
         vault_id: ID,
     }
 
-    // Event defined inside the module where it is emitted
     public struct RebalanceExecuted has copy, drop {
         spot: u64,
         margin: u64,
@@ -46,7 +42,6 @@ module tribook::agent {
         let admin_cap = AdminCap { id: object::new(ctx) };
         transfer::public_transfer(admin_cap, ctx.sender());
     }
-    /// Mint a new AgentCap for a vault. Only Admin can do this.
     public fun mint_agent_cap<USDC>(
         _admin: &AdminCap,
         vault: &Vault<USDC>,
@@ -68,7 +63,6 @@ module tribook::agent {
             vault_id: object::id(vault),
         }
     }
-    /// Start the rebalance process. Returns a RebalanceTicket.
     public fun start_rebalance<USDC>(
         vault: &Vault<USDC>,
         cap: &AgentCap
@@ -78,7 +72,6 @@ module tribook::agent {
             vault_id: cap.vault_id,
         }
     }
-    /// Allocate USDC from Vault and deposit to Spot BalanceManager.
     public fun rebalance_spot_deposit<USDC>(
         vault: &mut Vault<USDC>,
         cap: &AgentCap,
@@ -96,7 +89,6 @@ module tribook::agent {
         deepbook::balance_manager::deposit_with_cap(balance_manager, deposit_cap, coin, ctx);
     }
 
-    /// Withdraw USDC from Spot BalanceManager and return to Vault.
     public fun rebalance_spot_withdraw<USDC>(
         vault: &mut Vault<USDC>,
         cap: &AgentCap,
@@ -119,7 +111,6 @@ module tribook::agent {
         tribook_vault::deallocate_spot(vault, coin);
     }
 
-    /// Generate a TradeProof to allow the agent to trade on Spot pools using the Vault's spot_trade_cap.
     fun generate_spot_trade_proof<USDC>(
         vault: &Vault<USDC>,
         balance_manager: &mut BalanceManager,
@@ -160,7 +151,6 @@ module tribook::agent {
         );
     }
 
-    /// Withdraw USDC from MarginManager and return to Vault.
     public fun rebalance_margin_withdraw<USDC, BaseAsset, QuoteAsset>(
         vault: &mut Vault<USDC>,
         cap: &AgentCap,
@@ -195,7 +185,6 @@ module tribook::agent {
         tribook_vault::deallocate_margin(vault, coin);
     }
 
-    /// End the rebalance process when margin is NOT used, verifying risk limits and emitting the event.
     public fun end_rebalance<USDC>(
         vault: &Vault<USDC>,
         cap: &AgentCap,
@@ -206,7 +195,6 @@ module tribook::agent {
         assert!(object::id(vault) == cap.vault_id, EInvalidVault);
         let RebalanceTicket { vault_id: _ } = ticket;
 
-        // Ensure no margin is allocated to guarantee we don't have un-synced margin debt
         assert!(tribook_vault::margin_allocated(vault) == 0, EInvalidManager);
 
         let total_assets = tribook_vault::total_assets(vault);
@@ -215,10 +203,8 @@ module tribook::agent {
         let debt = tribook_vault::margin_debt(vault);
         let predict = tribook_vault::predict_allocated(vault);
 
-        // Verify risk limits
         risk::assert_risk_ok(total_assets, spot, margin, debt, predict);
 
-        // Emit RebalanceExecuted event
         sui::event::emit(RebalanceExecuted {
             spot,
             margin,
@@ -230,7 +216,6 @@ module tribook::agent {
         });
     }
 
-    /// End the rebalance process when margin IS used, reading margin debt on-chain first.
     public fun end_rebalance_with_margin<USDC, BaseAsset, QuoteAsset>(
         vault: &mut Vault<USDC>,
         cap: &AgentCap,
@@ -244,9 +229,7 @@ module tribook::agent {
         assert!(object::id(vault) == cap.vault_id, EInvalidVault);
         let RebalanceTicket { vault_id: _ } = ticket;
 
-        // On-chain debt syncing is mandatory when margin is used
         assert!(object::id(margin_manager) == tribook_vault::margin_manager_id(vault), EInvalidManager);
-        // Only call calculate_debts when the manager has an active loan; fresh deposits have no pool ID set.
         let (base_debt, quote_debt) = if (deepbook_margin::margin_manager::margin_pool_id(margin_manager).is_none()) {
             (0, 0)
         } else {
@@ -264,17 +247,14 @@ module tribook::agent {
         let debt = tribook_vault::margin_debt(vault);
         let predict = tribook_vault::predict_allocated(vault);
 
-        // Verify risk limits
         risk::assert_risk_ok(total_assets, spot, margin, debt, predict);
 
-        // Compute leverage (scaled by 100, e.g. 1.3x is 130)
         let leverage = if (margin > 0) {
             (((margin + debt) as u128) * 100 / (margin as u128)) as u64
         } else {
             0
         };
 
-        // Emit RebalanceExecuted event
         sui::event::emit(RebalanceExecuted {
             spot,
             margin,
@@ -286,8 +266,6 @@ module tribook::agent {
         });
     }
 
-    /// Place a Spot limit order using the Vault's trade cap.
-/// TradeProof is generated AND consumed inside this fn — never escapes the package.
 public fun rebalance_spot_place_order<USDC, BaseAsset, QuoteAsset>(
     vault: &Vault<USDC>,
     cap: &AgentCap,
@@ -309,7 +287,6 @@ public fun rebalance_spot_place_order<USDC, BaseAsset, QuoteAsset>(
     assert!(ticket.vault_id == cap.vault_id, EInvalidAgentCap);
     assert!(object::id(balance_manager) == tribook_vault::spot_manager_id(vault), EInvalidManager);
 
-    // proof powstaje i znika w tej funkcji
     let proof = generate_spot_trade_proof(vault, balance_manager, ctx);
 
     let _order_info = deepbook::pool::place_limit_order<BaseAsset, QuoteAsset>(

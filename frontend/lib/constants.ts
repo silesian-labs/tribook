@@ -1,4 +1,3 @@
-// Testnet deployment (tribook on testnet using DBUSDC)
 export const PACKAGE_ID = "0x30fc00c84984342f69a81cf114798d0f820c9e009121184e86761ad957ee99f6";
 export const VAULT_ID = "0x6351c896d9881fa9a04dedb00d37af0983a836d1d04063088825620bb121b3e1";
 

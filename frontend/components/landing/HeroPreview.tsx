@@ -12,7 +12,6 @@ const navData = navSeries.slice(-40).map((p) => p.nav);
 export function HeroPreview() {
   return (
     <Bezel className="shadow-ambient" innerClassName="p-0 overflow-hidden">
-      {/* top chrome */}
       <div className="flex items-center justify-between border-b border-white/5 px-5 py-3.5">
         <div className="flex items-center gap-3">
           <div className="flex gap-1.5">
@@ -29,7 +28,6 @@ export function HeroPreview() {
       </div>
 
       <div className="grid gap-5 p-5 sm:grid-cols-[1.3fr_1fr] sm:p-6">
-        {/* left: NAV + chart */}
         <div className="rounded-2xl border border-white/5 bg-white/[0.015] p-5">
           <div className="flex items-start justify-between">
             <div>
@@ -52,7 +50,6 @@ export function HeroPreview() {
           </div>
         </div>
 
-        {/* right: allocation across books */}
         <div className="rounded-2xl border border-white/5 bg-white/[0.015] p-5">
           <p className="text-[11px] uppercase tracking-eyebrow text-white/40">Allocation</p>
           <div className="mt-4 space-y-3.5">
