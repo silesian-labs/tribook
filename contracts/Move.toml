@@ -1,0 +1,10 @@
+[package]
+name = "tribook"
+edition = "2024"
+
+[dependencies]
+deepbook = { git = "https://github.com/MystenLabs/deepbookv3.git", subdir = "packages/deepbook", rev = "daa5a9514908968f11be1d0388f673e0ee1a5059" }
+deepbook_margin = { git = "https://github.com/MystenLabs/deepbookv3.git", subdir = "packages/deepbook_margin", rev = "daa5a9514908968f11be1d0388f673e0ee1a5059" }
+
+[addresses]
+tribook = "0x0"
